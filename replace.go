@@ -11,7 +11,7 @@ type Replacer struct {
 	new []byte
 }
 
-func NewReplacer(old, new []byte) *Replacer {
+func New(old, new []byte) *Replacer {
 	return &Replacer{old: old, new: new}
 }
 

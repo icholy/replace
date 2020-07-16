@@ -31,7 +31,7 @@ func TestReplacer(t *testing.T) {
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			r := NewReplacer([]byte(tt.old), []byte(tt.new))
+			r := New([]byte(tt.old), []byte(tt.new))
 			result, _, _ := transform.String(r, tt.in)
 			assert.Equal(t, result, tt.out)
 		})
