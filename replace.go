@@ -72,7 +72,7 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		nSrc += n
 		return nDst, nSrc, nil
 	}
-	return nDst, nSrc, transform.ErrEndOfSpan
+	return nDst, nSrc, transform.ErrShortSrc
 }
 
 func fullcopy(dst, src []byte) (int, error) {
