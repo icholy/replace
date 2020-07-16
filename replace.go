@@ -40,7 +40,6 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		return 0, 0, transform.ErrShortSrc
 	}
 	// replace all instances of old with new
-	var replaced bool
 	for {
 		i := bytes.Index(src[nSrc:], r.old)
 		if i == -1 {
@@ -52,15 +51,13 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		}
 		nDst += n
 		nSrc += i + len(r.old)
-		replaced = true
 	}
-	// if no replacements were found, skip everything except
-	// the trailing len(r.old) - 1
-	if !replaced {
+	// skip everything except the trailing len(r.old) - 1
+	if len(src[nSrc:]) >= len(r.old) {
 		skip := len(src[nSrc:]) - len(r.old) + 1
-		n := copy(dst[nDst:], src[nSrc:nSrc+skip])
-		if n < skip {
-			return 0, 0, transform.ErrShortDst
+		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
+		if err != nil {
+			return 0, 0, err
 		}
 		nSrc += n
 		nDst += n
