@@ -9,6 +9,8 @@ import (
 type Replacer struct {
 	old []byte
 	new []byte
+
+	transform.NopResetter
 }
 
 func New(old, new []byte) *Replacer {
@@ -81,5 +83,3 @@ func fullcopy(dst, src []byte) (int, error) {
 	}
 	return n, nil
 }
-
-func (r *Replacer) Reset() {}
