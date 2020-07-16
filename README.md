@@ -21,7 +21,7 @@ func main() {
 
   r := transform.NewReader(f, transform.Chain(
     replacer.New([]byte("foo"), []byte("bar")),
-    replacer.New([]byte("thing") []byte("test")),
+    replacer.New([]byte("thing"), []byte("test")),
   ))
 
   _, _ = io.Copy(os.Stdout, r)
