@@ -45,7 +45,11 @@ func TestReader(t *testing.T) {
 	f := golden.Open(t, "input.txt")
 	defer f.Close()
 
-	r := transform.NewReader(f, New([]byte("foo"), []byte("bar")))
+	r := transform.NewReader(f,
+		transform.Chain(
+			New([]byte("foo"), []byte("bar")),
+			New([]byte("test"), []byte("thing")),
+		))
 	data, err := ioutil.ReadAll(r)
 	assert.NilError(t, err)
 	golden.Assert(t, string(data), "output.txt")
