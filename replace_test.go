@@ -1,11 +1,13 @@
 package replace
 
 import (
+	"io/ioutil"
 	"strconv"
 	"testing"
 
 	"golang.org/x/text/transform"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
 )
 
 func TestReplacer(t *testing.T) {
@@ -37,4 +39,14 @@ func TestReplacer(t *testing.T) {
 			assert.Equal(t, result, tt.out)
 		})
 	}
+}
+
+func TestReader(t *testing.T) {
+	f := golden.Open(t, "input.txt")
+	defer f.Close()
+
+	r := transform.NewReader(f, New([]byte("foo"), []byte("bar")))
+	data, err := ioutil.ReadAll(r)
+	assert.NilError(t, err)
+	golden.Assert(t, string(data), "output.txt")
 }
