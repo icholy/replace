@@ -13,6 +13,8 @@ type Replacer struct {
 	transform.NopResetter
 }
 
+var _ transform.Transformer = (*Replacer)(nil)
+
 func New(old, new []byte) *Replacer {
 	return &Replacer{old: old, new: new}
 }
