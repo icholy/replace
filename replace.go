@@ -69,6 +69,7 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		}
 		nDst += n
 		nSrc += n
+		return nDst, nSrc, nil
 	}
 	return nDst, nSrc, transform.ErrEndOfSpan
 }
