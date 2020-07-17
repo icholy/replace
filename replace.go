@@ -6,11 +6,11 @@ import (
 	"golang.org/x/text/transform"
 )
 
-// Transformer is a transformer that replaces bytes
+// Transformer is a transformer that replaces text
 // See: http://golang.org/x/text/transform
 type Transformer struct {
-	old []byte
-	new []byte
+	old, new []byte
+	oldlen   int
 
 	transform.NopResetter
 }
@@ -19,23 +19,23 @@ var _ transform.Transformer = (*Transformer)(nil)
 
 // Bytes returns a transformer that replaces all instances of old with new
 func Bytes(old, new []byte) Transformer {
-	return Transformer{old: old, new: new}
+	return Transformer{old: old, new: new, oldlen: len(old)}
 }
 
 // String returns a transformer that replaces all instances of old with new
 func String(old, new string) Transformer {
-	return Transformer{old: []byte(old), new: []byte(new)}
+	return Bytes([]byte(old), []byte(new))
 }
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	// don't do anything for empty old string
-	if len(t.old) == 0 {
+	if t.oldlen == 0 {
 		n, err := fullcopy(dst, src)
 		return n, n, err
 	}
 	// make sure there's enough to even find a match
-	if len(src) < len(t.old) {
+	if len(src) < t.oldlen {
 		if atEOF {
 			n, err := fullcopy(dst, src)
 			return n, n, err
@@ -62,7 +62,7 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 		nSrc += i + len(t.old)
 	}
 	// skip everything except the trailing len(r.old) - 1
-	if skip := len(src[nSrc:]) - len(t.old) + 1; skip > 0 {
+	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		if err != nil {
 			return nDst, nSrc, err
@@ -73,12 +73,9 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
 		n, err := fullcopy(dst[nDst:], src[nSrc:])
-		if err != nil {
-			return nDst, nSrc, err
-		}
 		nDst += n
 		nSrc += n
-		return nDst, nSrc, nil
+		return nDst, nSrc, err
 	}
 	return nDst, nSrc, transform.ErrShortSrc
 }
