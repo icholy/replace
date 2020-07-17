@@ -1,6 +1,8 @@
 # Streaming text replacement
 
-> This package provides a x/text/transform.Transformer
+[![GoDoc](https://godoc.org/github.com/icholy/replace?status.svg)](https://godoc.org/github.com/icholy/replace)
+
+> This package provides a [x/text/transform.Transformer](https://godoc.org/golang.org/x/text/transform#Transformer)
 > implementation that replaces text
 
 ## Example
