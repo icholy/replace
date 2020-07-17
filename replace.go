@@ -18,18 +18,24 @@ type Transformer struct {
 var _ transform.Transformer = (*Transformer)(nil)
 
 // Bytes returns a transformer that replaces all instances of old with new
+// Note: empty old values don't match anything due to an optimisation in
+//       x/text/transform.String. This is an unfortunate deviation from
+//       the bytes.Replace behaviour
 func Bytes(old, new []byte) Transformer {
 	return Transformer{old: old, new: new, oldlen: len(old)}
 }
 
 // String returns a transformer that replaces all instances of old with new
+// Note: empty old values don't match anything due to an optimisation in
+//       x/text/transform.String. This is an unfortunate deviation from
+//       the strings.Replace behaviour
 func String(old, new string) Transformer {
 	return Bytes([]byte(old), []byte(new))
 }
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
-	// don't do anything for empty old string
+	// don't do anything for empty old string.
 	if t.oldlen == 0 {
 		n, err := fullcopy(dst, src)
 		return n, n, err
