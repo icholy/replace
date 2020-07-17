@@ -32,19 +32,13 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 	// don't do anything for empty old string
 	if len(t.old) == 0 {
 		n, err := fullcopy(dst, src)
-		if err != nil {
-			return 0, 0, err
-		}
-		return n, n, nil
+		return n, n, err
 	}
 	// make sure there's enough to even find a match
 	if len(src) < len(t.old) {
 		if atEOF {
 			n, err := fullcopy(dst, src)
-			if err != nil {
-				return 0, 0, err
-			}
-			return n, n, nil
+			return n, n, err
 		}
 		return 0, 0, transform.ErrShortSrc
 	}
