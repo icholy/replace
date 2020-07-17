@@ -75,6 +75,8 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 		return nDst, nSrc, err
 	}
 	// skip everything except the trailing len(r.old) - 1
+	// we do this becasue there could be a match straddling
+	// the boundary
 	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		nSrc += n
