@@ -6,22 +6,26 @@ import (
 	"golang.org/x/text/transform"
 )
 
-type Replacer struct {
+type Transformer struct {
 	old []byte
 	new []byte
 
 	transform.NopResetter
 }
 
-var _ transform.Transformer = (*Replacer)(nil)
+var _ transform.Transformer = (*Transformer)(nil)
 
-func New(old, new []byte) *Replacer {
-	return &Replacer{old: old, new: new}
+func Bytes(old, new []byte) *Transformer {
+	return &Transformer{old: old, new: new}
 }
 
-func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func String(old, new string) *Transformer {
+	return &Transformer{old: []byte(old), new: []byte(new)}
+}
+
+func (t *Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	// don't do anything for empty old string
-	if len(r.old) == 0 {
+	if len(t.old) == 0 {
 		n, err := fullcopy(dst, src)
 		if err != nil {
 			return 0, 0, err
@@ -29,7 +33,7 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		return n, n, nil
 	}
 	// make sure there's enough to even find a match
-	if len(src) < len(r.old) {
+	if len(src) < len(t.old) {
 		if atEOF {
 			n, err := fullcopy(dst, src)
 			if err != nil {
@@ -41,24 +45,26 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 	}
 	// replace all instances of old with new
 	for {
-		i := bytes.Index(src[nSrc:], r.old)
+		i := bytes.Index(src[nSrc:], t.old)
 		if i == -1 {
 			break
 		}
+		// copy everything up to the match
 		n1, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
 		if err != nil {
 			return nDst, nSrc, err
 		}
-		n2, err := fullcopy(dst[nDst+i:], r.new)
+		// copy the new value
+		n2, err := fullcopy(dst[nDst+i:], t.new)
 		if err != nil {
 			return nDst, nSrc, err
 		}
 		nDst += n1 + n2
-		nSrc += i + len(r.old)
+		nSrc += i + len(t.old)
 	}
 	// skip everything except the trailing len(r.old) - 1
-	if len(src[nSrc:]) >= len(r.old) {
-		skip := len(src[nSrc:]) - len(r.old) + 1
+	if len(src[nSrc:]) >= len(t.old) {
+		skip := len(src[nSrc:]) - len(t.old) + 1
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		if err != nil {
 			return nDst, nSrc, err

@@ -1,17 +1,15 @@
 package replace
 
 import (
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"testing"
 
 	"golang.org/x/text/transform"
 	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
 )
 
-func TestReplacer(t *testing.T) {
+func TestTransformer(t *testing.T) {
 	tests := []struct {
 		in       string
 		old, new string
@@ -35,24 +33,10 @@ func TestReplacer(t *testing.T) {
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			r := New([]byte(tt.old), []byte(tt.new))
-			result, _, err := transform.String(r, tt.in)
+			tr := String(tt.old, tt.new)
+			result, _, err := transform.String(tr, tt.in)
 			assert.NilError(t, err)
 			assert.Equal(t, result, tt.out)
 		})
 	}
-}
-
-func TestReader(t *testing.T) {
-	f := golden.Open(t, "input.txt")
-	defer f.Close()
-
-	r := transform.NewReader(f,
-		transform.Chain(
-			New([]byte("foo"), []byte("bar")),
-			New([]byte("test"), []byte("thing")),
-		))
-	data, err := ioutil.ReadAll(r)
-	assert.NilError(t, err)
-	golden.Assert(t, string(data), "output.txt")
 }

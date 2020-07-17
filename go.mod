@@ -1,4 +1,4 @@
-module github.com/icholy/replacer
+module github.com/icholy/replace
 
 go 1.14
 
