@@ -18,17 +18,13 @@ type Transformer struct {
 var _ transform.Transformer = (*Transformer)(nil)
 
 // Bytes returns a transformer that replaces all instances of old with new
-// Note: empty old values don't match anything due to an optimisation in
-//       x/text/transform.String. This is an unfortunate deviation from
-//       the bytes.Replace behaviour
+// Note: unlike bytes.Replace, empty old values don't match anytihng
 func Bytes(old, new []byte) Transformer {
 	return Transformer{old: old, new: new, oldlen: len(old)}
 }
 
 // String returns a transformer that replaces all instances of old with new
-// Note: empty old values don't match anything due to an optimisation in
-//       x/text/transform.String. This is an unfortunate deviation from
-//       the strings.Replace behaviour
+// Note: unlike strings.Replace, empty old values don't match anytihng
 func String(old, new string) Transformer {
 	return Bytes([]byte(old), []byte(new))
 }
