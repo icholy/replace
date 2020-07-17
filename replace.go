@@ -6,6 +6,8 @@ import (
 	"golang.org/x/text/transform"
 )
 
+// Transformer is a transformer that replaces bytes
+// See: http://golang.org/x/text/transform
 type Transformer struct {
 	old []byte
 	new []byte
@@ -15,15 +17,18 @@ type Transformer struct {
 
 var _ transform.Transformer = (*Transformer)(nil)
 
-func Bytes(old, new []byte) *Transformer {
-	return &Transformer{old: old, new: new}
+// Bytes returns a transformer that replaces all instances of old with new
+func Bytes(old, new []byte) Transformer {
+	return Transformer{old: old, new: new}
 }
 
-func String(old, new string) *Transformer {
-	return &Transformer{old: []byte(old), new: []byte(new)}
+// String returns a transformer that replaces all instances of old with new
+func String(old, new string) Transformer {
+	return Transformer{old: []byte(old), new: []byte(new)}
 }
 
-func (t *Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+// Transform implements golang.org/x/text/transform#Transformer
+func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	// don't do anything for empty old string
 	if len(t.old) == 0 {
 		n, err := fullcopy(dst, src)
@@ -88,7 +93,7 @@ func (t *Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, er
 func fullcopy(dst, src []byte) (int, error) {
 	n := copy(dst, src)
 	if n < len(src) {
-		return 0, transform.ErrShortDst
+		return n, transform.ErrShortDst
 	}
 	return n, nil
 }
