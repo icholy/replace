@@ -38,14 +38,6 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 		n, err := fullcopy(dst, src)
 		return n, n, err
 	}
-	// make sure there's enough to even find a match
-	if len(src) < t.oldlen {
-		if atEOF {
-			n, err := fullcopy(dst, src)
-			return n, n, err
-		}
-		return 0, 0, transform.ErrShortSrc
-	}
 	// replace all instances of old with new
 	for {
 		i := bytes.Index(src[nSrc:], t.old)
