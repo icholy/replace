@@ -67,6 +67,13 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 		nDst += n
 		nSrc += t.oldlen
 	}
+	// if we're at the end, tack on any remaining bytes
+	if atEOF {
+		n, err := fullcopy(dst[nDst:], src[nSrc:])
+		nDst += n
+		nSrc += n
+		return nDst, nSrc, err
+	}
 	// skip everything except the trailing len(r.old) - 1
 	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
@@ -75,13 +82,6 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 		if err != nil {
 			return nDst, nSrc, err
 		}
-	}
-	// if we're at the end, tack on any remaining bytes
-	if atEOF {
-		n, err := fullcopy(dst[nDst:], src[nSrc:])
-		nDst += n
-		nSrc += n
-		return nDst, nSrc, err
 	}
 	return nDst, nSrc, transform.ErrShortSrc
 }
