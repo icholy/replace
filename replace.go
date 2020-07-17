@@ -64,11 +64,11 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 	// skip everything except the trailing len(r.old) - 1
 	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
+		nSrc += n
+		nDst += n
 		if err != nil {
 			return nDst, nSrc, err
 		}
-		nSrc += n
-		nDst += n
 	}
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
