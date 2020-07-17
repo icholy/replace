@@ -53,17 +53,19 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 			break
 		}
 		// copy everything up to the match
-		n1, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
+		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
+		nSrc += n
+		nDst += n
 		if err != nil {
 			return nDst, nSrc, err
 		}
 		// copy the new value
-		n2, err := fullcopy(dst[nDst+i:], t.new)
+		n, err = fullcopy(dst[nDst:], t.new)
 		if err != nil {
 			return nDst, nSrc, err
 		}
-		nDst += n1 + n2
-		nSrc += i + len(t.old)
+		nDst += n
+		nSrc += t.oldlen
 	}
 	// skip everything except the trailing len(r.old) - 1
 	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
