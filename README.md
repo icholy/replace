@@ -22,7 +22,7 @@ func main() {
 
 	r := transform.NewReader(f, transform.Chain(
 		replace.String("foo", "bar"),
-		replace.String("thing", "test"),
+		replace.Bytes([]byte("thing"), []byte("test")),
 	))
 
 	_, _ = io.Copy(os.Stdout, r)
