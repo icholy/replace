@@ -6,7 +6,7 @@ import (
 	"golang.org/x/text/transform"
 )
 
-// Transformer is a transformer that replaces text
+// Transformer replaces text in a stream
 // See: http://golang.org/x/text/transform
 type Transformer struct {
 	old, new []byte
