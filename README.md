@@ -6,25 +6,25 @@
 ## Example
 
 ``` go
+package main
 
 import (
-  "os"
-  "io"
+	"io"
+	"os"
 
-  "github.com/icholy/replacer"
+	"github.com/icholy/replace"
 	"golang.org/x/text/transform"
 )
 
 func main() {
-  f, _ := os.Open("file")
-  defer f.Close()
+	f, _ := os.Open("file")
+	defer f.Close()
 
-  r := transform.NewReader(f, transform.Chain(
-    replacer.New([]byte("foo"), []byte("bar")),
-    replacer.New([]byte("thing"), []byte("test")),
-  ))
+	r := transform.NewReader(f, transform.Chain(
+		replace.String("foo", "bar"),
+		replace.String("thing", "test"),
+	))
 
-  _, _ = io.Copy(os.Stdout, r)
+	_, _ = io.Copy(os.Stdout, r)
 }
-
 ```
