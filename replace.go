@@ -47,11 +47,11 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		}
 		n1, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
 		if err != nil {
-			return 0, 0, err
+			return nDst, nSrc, err
 		}
 		n2, err := fullcopy(dst[nDst+i:], r.new)
 		if err != nil {
-			return 0, 0, err
+			return nDst, nSrc, err
 		}
 		nDst += n1 + n2
 		nSrc += i + len(r.old)
@@ -61,7 +61,7 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		skip := len(src[nSrc:]) - len(r.old) + 1
 		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		if err != nil {
-			return 0, 0, err
+			return nDst, nSrc, err
 		}
 		nSrc += n
 		nDst += n
@@ -70,7 +70,7 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 	if atEOF {
 		n, err := fullcopy(dst[nDst:], src[nSrc:])
 		if err != nil {
-			return 0, 0, err
+			return nDst, nSrc, err
 		}
 		nDst += n
 		nSrc += n
