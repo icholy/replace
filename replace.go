@@ -45,11 +45,15 @@ func (r *Replacer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err e
 		if i == -1 {
 			break
 		}
-		n := copy(dst[nDst:], src[nSrc:nSrc+i]) + copy(dst[nDst+i:], r.new)
-		if n < i+len(r.new) {
-			return 0, 0, transform.ErrShortDst
+		n1, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
+		if err != nil {
+			return 0, 0, err
 		}
-		nDst += n
+		n2, err := fullcopy(dst[nDst+i:], r.new)
+		if err != nil {
+			return 0, 0, err
+		}
+		nDst += n1 + n2
 		nSrc += i + len(r.old)
 	}
 	// skip everything except the trailing len(r.old) - 1
