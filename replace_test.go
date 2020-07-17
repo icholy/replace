@@ -15,6 +15,7 @@ func TestTransformer(t *testing.T) {
 		old, new string
 		out      string
 	}{
+		{"test", "", "x", "test"},
 		{"a", "a", "b", "b"},
 		{"yes", "yes", "no", "no"},
 		{"what what what", "what", "wut", "wut wut wut"},
