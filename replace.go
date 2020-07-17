@@ -17,21 +17,23 @@ type Transformer struct {
 
 var _ transform.Transformer = (*Transformer)(nil)
 
-// Bytes returns a transformer that replaces all instances of old with new
-// Note: unlike bytes.Replace, empty old values don't match anytihng
+// Bytes returns a transformer that replaces all instances of old with new.
+// Unlike bytes.Replace, empty old values don't match anything.
 func Bytes(old, new []byte) Transformer {
 	return Transformer{old: old, new: new, oldlen: len(old)}
 }
 
-// String returns a transformer that replaces all instances of old with new
-// Note: unlike strings.Replace, empty old values don't match anytihng
+// String returns a transformer that replaces all instances of old with new.
+// Unlike strings.Replace, empty old values don't match anything.
 func String(old, new string) Transformer {
 	return Bytes([]byte(old), []byte(new))
 }
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
-	// don't do anything for empty old string.
+	// don't do anything for empty old string. We're forced to do this because an optimization in
+	// transform.String prevents us from generating any output when the src is empty.
+	// see: https://github.com/golang/text/blob/master/transform/transform.go#L570-L576
 	if t.oldlen == 0 {
 		n, err := fullcopy(dst, src)
 		return n, n, err
