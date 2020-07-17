@@ -3,6 +3,7 @@ package replace
 import (
 	"io/ioutil"
 	"strconv"
+	"strings"
 	"testing"
 
 	"golang.org/x/text/transform"
@@ -30,6 +31,7 @@ func TestReplacer(t *testing.T) {
 		{"banana", "ana", "<>", "b<>na"},
 		{"banana", "a", "a", "banana"},
 		{"xxx", "x", "", ""},
+		{strings.Repeat("foo_", 8<<10), "foo", "bar", strings.Repeat("bar_", 8<<10)},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
