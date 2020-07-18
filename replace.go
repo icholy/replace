@@ -171,17 +171,17 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
-		// skip the match if it ends at the end the src buffer.
-		// it could potentionally match more
-		if index[1] == len(src)-1 && !atEOF {
-			break
-		}
 		// copy evertying up to the match
 		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
 		nSrc += n
 		nDst += n
 		if err != nil {
 			return nDst, nSrc, err
+		}
+		// skip the match if it ends at the end the src buffer.
+		// it could potentionally match more
+		if index[1] == len(src)-1 && !atEOF {
+			break
 		}
 		// copy the replacement
 		n, err = fullcopy(dst[nDst:], t.replace(src, index))
