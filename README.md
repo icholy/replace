@@ -24,9 +24,16 @@ func main() {
 	defer f.Close()
 
 	r := transform.NewReader(f, transform.Chain(
+		// simple replace
 		replace.String("foo", "bar"),
 		replace.Bytes([]byte("thing"), []byte("test")),
-		replace.RegexpString(regexp.MustCompile(`\d+`), "a number")
+		// remove all words that start with baz
+		replace.Regexp(regexp.MustCompile(`baz\w+`), nil),
+		// increment all numbers
+		replace.RegexpStringFunc(regexp.MustCompile(`\d+`, func(match string) string {
+			x, _ := strconv.Atoi(match)
+			return strconv.Itoa(x+1)
+		}))
 	))
 
 	_, _ = io.Copy(os.Stdout, r)
