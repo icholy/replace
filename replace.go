@@ -107,7 +107,7 @@ func makeRegexp(re *regexp.Regexp, replace func(src []byte, index []int) []byte)
 
 // Regexp returns a transformer that replaces all matches of re with new
 func Regexp(re *regexp.Regexp, new []byte) RegexpTransformer {
-	return makeRegexp(re, func(src []byte, index []int) []byte { return new })
+	return makeRegexp(re, func(_ []byte, _ []int) []byte { return new })
 }
 
 // RegexpString returns a transformer that replaces all matches of re with new
