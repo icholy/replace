@@ -1,6 +1,7 @@
 package replace
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -63,4 +64,17 @@ func TestRegex(t *testing.T) {
 			assert.DeepEqual(t, result, tt.out)
 		})
 	}
+}
+
+func TestRegexStringSubmatchFunc(t *testing.T) {
+	in := strings.Repeat("--1x-- --2x-- --3x--", 8<<10)
+	re := regexp.MustCompile(`--(\d)x--`)
+	tr := RegexpStringSubmatchFunc(re, func(match []string) string {
+		x, _ := strconv.Atoi(match[1])
+		return fmt.Sprintf("--%dx--", x-1)
+	})
+	result, _, err := transform.String(tr, in)
+	assert.NilError(t, err)
+	want := strings.Repeat("--0x-- --1x-- --2x--", 8<<10)
+	assert.DeepEqual(t, result, want)
 }
