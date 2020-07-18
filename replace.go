@@ -111,7 +111,7 @@ func Regexp(re *regexp.Regexp, new []byte) RegexpTransformer {
 }
 
 // RegexpString returns a transformer that replaces all matches of re with new
-func RegexpString(re *regexp.Regexp, new []byte) RegexpTransformer {
+func RegexpString(re *regexp.Regexp, new string) RegexpTransformer {
 	return Regexp(re, []byte(new))
 }
 
