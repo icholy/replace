@@ -148,7 +148,7 @@ func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) Regexp
 		match := make([][]byte, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
-			if start != -1 {
+			if start >= 0 {
 				match[i] = make([]byte, end-start)
 				copy(match[i], src[start:end])
 			}
@@ -165,7 +165,7 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 		match := make([]string, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
-			if start != -1 {
+			if start >= 0 {
 				match[i] = string(src[start:end])
 			}
 		}
