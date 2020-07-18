@@ -105,6 +105,10 @@ func TestTransformer(t *testing.T) {
 				return "num"
 			}),
 		},
+		{
+			in: "bazzzz buzz foo what biz", out: "  foo what ",
+			tr: Regexp(regexp.MustCompile(`b\w+z\w*`), nil),
+		},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
