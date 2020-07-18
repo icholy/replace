@@ -99,6 +99,12 @@ func TestTransformer(t *testing.T) {
 				return fmt.Sprintf("--%dx--", x-1)
 			}),
 		},
+		{
+			in: "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ", out: strings.Repeat("num ", 16),
+			tr: RegexpStringFunc(regexp.MustCompile(`\d+`), func(_ string) string {
+				return "num"
+			}),
+		},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
