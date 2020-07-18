@@ -96,8 +96,10 @@ type RegexpTransformer struct {
 
 var _ transform.Transformer = (*RegexpTransformer)(nil)
 
-// makeRegexp creates a regex transformer with default values
-func makeRegexp(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexpTransformer {
+// RegexpIndexFunc returns a transformer that replaces all matches of re with the return value of replace.
+// The replace function recieves the uncerlying src buffer and indexes into that buffer. The caller should
+// not modify the src buffer. This is a lower level api which should not be used in the general case.
+func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexpTransformer {
 	return RegexpTransformer{
 		re:              re,
 		replace:         replace,
@@ -107,7 +109,7 @@ func makeRegexp(re *regexp.Regexp, replace func(src []byte, index []int) []byte)
 
 // Regexp returns a transformer that replaces all matches of re with new
 func Regexp(re *regexp.Regexp, new []byte) RegexpTransformer {
-	return makeRegexp(re, func(_ []byte, _ []int) []byte { return new })
+	return RegexpIndexFunc(re, func(_ []byte, _ []int) []byte { return new })
 }
 
 // RegexpString returns a transformer that replaces all matches of re with new
@@ -119,7 +121,7 @@ func RegexpString(re *regexp.Regexp, new string) RegexpTransformer {
 // result of calling replace with the match. Replace may be called with the
 // same match multiple times.
 func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransformer {
-	return makeRegexp(re, func(src []byte, index []int) []byte {
+	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([]byte, index[1]-index[0])
 		copy(match, src[index[0]:index[1]])
 		return replace(match)
@@ -130,7 +132,7 @@ func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransforme
 // the result of calling replace with the match. Replace may be called with
 // the same match multiple times.
 func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) RegexpTransformer {
-	return makeRegexp(re, func(src []byte, index []int) []byte {
+	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([]byte, index[1]-index[0])
 		copy(match, src[index[0]:index[1]])
 		return []byte(replace(string(match)))
@@ -141,7 +143,7 @@ func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) RegexpTran
 // result of calling replace with the submatch. Replace may be called with the
 // same match multiple times.
 func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) RegexpTransformer {
-	return makeRegexp(re, func(src []byte, index []int) []byte {
+	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([][]byte, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
@@ -156,7 +158,7 @@ func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) Regexp
 // result of calling replace with the submatch. Replace may be called with the
 // same match multiple times.
 func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) RegexpTransformer {
-	return makeRegexp(re, func(src []byte, index []int) []byte {
+	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([]string, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
