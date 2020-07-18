@@ -51,6 +51,8 @@ func TestRegex(t *testing.T) {
 		out string
 	}{
 		{"a", "a", "b", "b"},
+		{"testing", ".*", "x", "x"},
+		{strings.Repeat("--ax-- --bx--", 4<<10), `--\wx--`, "--xx--", strings.Repeat("--xx-- --xx--", 4<<10)},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
