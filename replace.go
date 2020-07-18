@@ -153,6 +153,8 @@ func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int
 		if err != nil {
 			return nDst, nSrc, err
 		}
+		nDst += n
+		nSrc = index[1]
 	}
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
