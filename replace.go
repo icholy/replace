@@ -134,7 +134,7 @@ func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int
 			continue
 		}
 		// copy evertying up to the match
-		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+index[0]])
+		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
 		nSrc += n
 		nDst += n
 		if err != nil {
