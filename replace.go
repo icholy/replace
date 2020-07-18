@@ -10,10 +10,10 @@ import (
 // Transformer replaces text in a stream
 // See: http://golang.org/x/text/transform
 type Transformer struct {
+	transform.NopResetter
+
 	old, new []byte
 	oldlen   int
-
-	transform.NopResetter
 }
 
 var _ transform.Transformer = (*Transformer)(nil)
@@ -81,9 +81,9 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 	return nDst, nSrc, transform.ErrShortSrc
 }
 
-// RegexTransformer replaces regexp matches in a stream
+// RegexpTransformer replaces regexp matches in a stream
 // See: http://golang.org/x/text/transform
-type RegexTransformer struct {
+type RegexpTransformer struct {
 	transform.NopResetter
 
 	// MaxSourceBuffer is the maximum size of the window used to search for the
@@ -94,54 +94,54 @@ type RegexTransformer struct {
 	replace func(src []byte, index []int) []byte
 }
 
-var _ transform.Transformer = (*RegexTransformer)(nil)
+var _ transform.Transformer = (*RegexpTransformer)(nil)
 
-// makeRegex creates a regex transformer with default values
-func makeRegex(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexTransformer {
-	return RegexTransformer{
+// makeRegexp creates a regex transformer with default values
+func makeRegexp(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexpTransformer {
+	return RegexpTransformer{
 		re:              re,
 		replace:         replace,
 		MaxSourceBuffer: 4 << 10,
 	}
 }
 
-// Regex returns a transformer that replaces all matches of re with new
-func Regex(re *regexp.Regexp, new []byte) RegexTransformer {
-	return makeRegex(re, func(src []byte, index []int) []byte { return new })
+// Regexp returns a transformer that replaces all matches of re with new
+func Regexp(re *regexp.Regexp, new []byte) RegexpTransformer {
+	return makeRegexp(re, func(src []byte, index []int) []byte { return new })
 }
 
-// RegexString returns a transformer that replaces all matches of re with new
-func RegexString(re *regexp.Regexp, new []byte) RegexTransformer {
-	return Regex(re, []byte(new))
+// RegexpString returns a transformer that replaces all matches of re with new
+func RegexpString(re *regexp.Regexp, new []byte) RegexpTransformer {
+	return Regexp(re, []byte(new))
 }
 
-// RegexFunc returns a transformer that replaces all matches of re with the
+// RegexpFunc returns a transformer that replaces all matches of re with the
 // result of calling replace with the match. Replace may be called with the
 // same match multiple times.
-func RegexFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
-	return makeRegex(re, func(src []byte, index []int) []byte {
+func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransformer {
+	return makeRegexp(re, func(src []byte, index []int) []byte {
 		match := make([]byte, index[1]-index[0])
 		copy(match, src[index[0]:index[1]])
 		return replace(match)
 	})
 }
 
-// RegexStringFunc returns a transformer that replaces all matches of re with
+// RegexpStringFunc returns a transformer that replaces all matches of re with
 // the result of calling replace with the match. Replace may be called with
 // the same match multiple times.
-func RegexStringFunc(re *regexp.Regexp, replace func(string) string) RegexTransformer {
-	return makeRegex(re, func(src []byte, index []int) []byte {
+func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) RegexpTransformer {
+	return makeRegexp(re, func(src []byte, index []int) []byte {
 		match := make([]byte, index[1]-index[0])
 		copy(match, src[index[0]:index[1]])
 		return []byte(replace(string(match)))
 	})
 }
 
-// RegexSubmatchFunc returns a transformer that replaces all matches of re with the
+// RegexpSubmatchFunc returns a transformer that replaces all matches of re with the
 // result of calling replace with the submatch. Replace may be called with the
 // same match multiple times.
-func RegexSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) RegexTransformer {
-	return makeRegex(re, func(src []byte, index []int) []byte {
+func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) RegexpTransformer {
+	return makeRegexp(re, func(src []byte, index []int) []byte {
 		match := make([][]byte, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
@@ -152,11 +152,11 @@ func RegexSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) RegexTr
 	})
 }
 
-// RegexStringSubmatchFunc returns a transformer that replaces all matches of re with the
+// RegexpStringSubmatchFunc returns a transformer that replaces all matches of re with the
 // result of calling replace with the submatch. Replace may be called with the
 // same match multiple times.
-func RegexStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) RegexTransformer {
-	return makeRegex(re, func(src []byte, index []int) []byte {
+func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) RegexpTransformer {
+	return makeRegexp(re, func(src []byte, index []int) []byte {
 		match := make([]string, 1+re.NumSubexp())
 		for i := range match {
 			start, end := index[i*2], index[i*2+1]
@@ -169,7 +169,7 @@ func RegexStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) R
 }
 
 // Transform implements golang.org/x/text/transform#Transformer
-func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
 		// skip the match if it ends at the end the src buffer.
 		// it could potentionally match more
