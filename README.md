@@ -28,7 +28,7 @@ func main() {
 		replace.String("foo", "bar"),
 		replace.Bytes([]byte("thing"), []byte("test")),
 		// remove all words that start with baz
-		replace.Regexp(regexp.MustCompile(`baz\w+`), nil),
+		replace.Regexp(regexp.MustCompile(`baz\w*`), nil),
 		// increment all numbers
 		replace.RegexpStringFunc(regexp.MustCompile(`\d+`, func(match string) string {
 			x, _ := strconv.Atoi(match)
