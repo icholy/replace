@@ -134,9 +134,7 @@ func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransforme
 // the same match multiple times.
 func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) RegexpTransformer {
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
-		match := make([]byte, index[1]-index[0])
-		copy(match, src[index[0]:index[1]])
-		return []byte(replace(string(match)))
+		return []byte(replace(string(src[index[0]:index[1]])))
 	})
 }
 
