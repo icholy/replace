@@ -162,10 +162,7 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([]string, 1+re.NumSubexp())
 		for i := range match {
-			start, end := index[i*2], index[i*2+1]
-			tmp := make([]byte, end-start)
-			copy(tmp, src[start:end])
-			match[i] = string(tmp)
+			match[i] = string(src[index[i*2]:index[i*2+1]])
 		}
 		return []byte(replace(match))
 	})
