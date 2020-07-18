@@ -97,7 +97,7 @@ type RegexpTransformer struct {
 var _ transform.Transformer = (*RegexpTransformer)(nil)
 
 // RegexpIndexFunc returns a transformer that replaces all matches of re with the return value of replace.
-// The replace function recieves the uncerlying src buffer and indexes into that buffer. The caller should
+// The replace function recieves the underlying src buffer and indexes into that buffer. The caller should
 // not modify the src buffer. Replace may be called with the same match multiple times.
 // This is a lower level api which should not be used in the general case.
 func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexpTransformer {
