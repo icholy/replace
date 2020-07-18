@@ -13,31 +13,29 @@ import (
 
 func TestTransformer(t *testing.T) {
 	tests := []struct {
-		in       string
-		old, new string
-		out      string
+		in, out string
+		tr      transform.Transformer
 	}{
-		{"test", "", "x", "test"},
-		{"a", "a", "b", "b"},
-		{"yes", "yes", "no", "no"},
-		{"what what what", "what", "wut", "wut wut wut"},
-		{"???????", "?", "*", "*******"},
-		{"no matches", "x", "y", "no matches"},
-		{"hello", "l", "L", "heLLo"},
-		{"hello", "x", "X", "hello"},
-		{"", "x", "X", ""},
-		{"radar", "r", "<r>", "<r>ada<r>"},
-		{"banana", "a", "<>", "b<>n<>n<>"},
-		{"banana", "an", "<>", "b<><>a"},
-		{"banana", "ana", "<>", "b<>na"},
-		{"banana", "a", "a", "banana"},
-		{"xxx", "x", "", ""},
-		{strings.Repeat("foo_", 8<<10), "foo", "bar", strings.Repeat("bar_", 8<<10)},
+		{"test", "test", String("", "x")},
+		{"a", "b", String("a", "b")},
+		{"yes", "no", String("yes", "no")},
+		{"what what what", "wut wut wut", String("what", "wut")},
+		{"???????", "*******", String("?", "*")},
+		{"no matches", "no matches", String("x", "y")},
+		{"hello", "heLLo", String("l", "L")},
+		{"hello", "hello", String("x", "X")},
+		{"", "", String("x", "X")},
+		{"radar", "<r>ada<r>", String("r", "<r>")},
+		{"banana", "b<>n<>n<>", String("a", "<>")},
+		{"banana", "b<><>a", String("an", "<>")},
+		{"banana", "b<>na", String("ana", "<>")},
+		{"banana", "banana", String("a", "a")},
+		{"xxx", "", String("x", "")},
+		{strings.Repeat("foo_", 8<<10), strings.Repeat("bar_", 8<<10), String("foo", "bar")},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			tr := String(tt.old, tt.new)
-			result, _, err := transform.String(tr, tt.in)
+			result, _, err := transform.String(tt.tr, tt.in)
 			assert.NilError(t, err)
 			assert.DeepEqual(t, result, tt.out)
 		})
