@@ -57,7 +57,7 @@ func TestRegex(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			re := regexp.MustCompile(tt.re)
-			tr := RegexString(re, tt.new)
+			tr := Regex(re, func(match []byte) []byte { return []byte(tt.new) })
 			result, _, err := transform.String(tr, tt.in)
 			assert.NilError(t, err)
 			assert.DeepEqual(t, result, tt.out)

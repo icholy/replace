@@ -90,38 +90,23 @@ type RegexTransformer struct {
 	MaxSourceBuffer int
 
 	re      *regexp.Regexp
-	new     []byte
-	replace func([]byte) []byte
+	replace func(src []byte, index []int) []byte
 }
 
 var _ transform.Transformer = (*RegexTransformer)(nil)
 
-// RegexBytes returns a transformer that replaces all matches of re with new
-func RegexBytes(re *regexp.Regexp, new []byte) RegexTransformer {
-	return RegexTransformer{
-		re:              re,
-		MaxSourceBuffer: 4 << 10,
-		new:             new,
-	}
-}
-
-// RegexString returns a transformer that replaces all matches of re with new
-func RegexString(re *regexp.Regexp, new string) RegexTransformer {
-	return RegexTransformer{
-		re:              re,
-		MaxSourceBuffer: 4 << 10,
-		new:             []byte(new),
-	}
-}
-
-// RegexFunc returns a transformer that replaces all matches of re with the
+// Regex returns a transformer that replaces all matches of re with the
 // result of calling replace with the match. Replace may be called with the
 // same match multiple times.
-func RegexFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
+func Regex(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
 		MaxSourceBuffer: 4 << 10,
-		replace:         replace,
+		replace: func(src []byte, index []int) []byte {
+			match := make([]byte, index[1]-index[0])
+			copy(match, src[index[0]:index[1]])
+			return replace(match)
+		},
 	}
 }
 
@@ -141,15 +126,7 @@ func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int
 			return nDst, nSrc, err
 		}
 		// copy the replacement
-		if t.new != nil {
-			n, err = fullcopy(dst[nDst:], t.new)
-		} else {
-			// could just document not to modify the replace parameter
-			// but I don't trust people to read it.
-			match := make([]byte, index[1]-index[0])
-			copy(match, src[index[0]:index[1]])
-			n, err = fullcopy(dst[nDst:], t.replace(match))
-		}
+		n, err = fullcopy(dst[nDst:], t.replace(src, index))
 		if err != nil {
 			return nDst, nSrc, err
 		}
