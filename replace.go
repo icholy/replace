@@ -87,7 +87,7 @@ type RegexpTransformer struct {
 	transform.NopResetter
 
 	// MaxSourceBuffer is the maximum size of the window used to search for the
-	// regex match. (Default is 4mb).
+	// regex match. (Default is 64kb).
 	MaxSourceBuffer int
 
 	re      *regexp.Regexp
@@ -101,7 +101,7 @@ func makeRegexp(re *regexp.Regexp, replace func(src []byte, index []int) []byte)
 	return RegexpTransformer{
 		re:              re,
 		replace:         replace,
-		MaxSourceBuffer: 4 << 10,
+		MaxSourceBuffer: 64 << 10,
 	}
 }
 
