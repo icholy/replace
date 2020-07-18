@@ -105,8 +105,7 @@ func RegexBytes(re *regexp.Regexp, new []byte) RegexTransformer {
 	}
 }
 
-// RegexString returns a transformer that replaces all matches of re with the
-// results returned from the replace function
+// RegexString returns a transformer that replaces all matches of re with new
 func RegexString(re *regexp.Regexp, new string) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
@@ -115,6 +114,9 @@ func RegexString(re *regexp.Regexp, new string) RegexTransformer {
 	}
 }
 
+// RegexFunc returns a transformer that replaces all matches of re with the
+// result of calling replace with the match. Replace may be called with the
+// same match multiple times.
 func RegexFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
