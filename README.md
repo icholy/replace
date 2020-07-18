@@ -13,6 +13,7 @@ package main
 import (
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/icholy/replace"
 	"golang.org/x/text/transform"
@@ -25,6 +26,7 @@ func main() {
 	r := transform.NewReader(f, transform.Chain(
 		replace.String("foo", "bar"),
 		replace.Bytes([]byte("thing"), []byte("test")),
+		replace.RegexpString(regexp.MustCompile(`\d+`), "a number")
 	))
 
 	_, _ = io.Copy(os.Stdout, r)
