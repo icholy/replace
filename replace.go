@@ -90,32 +90,36 @@ type RegexTransformer struct {
 	MaxSourceBuffer int
 
 	re      *regexp.Regexp
-	replace func(src []byte, index []int) []byte
+	new     []byte
+	replace func([]byte) []byte
 }
 
 var _ transform.Transformer = (*RegexTransformer)(nil)
 
-// RegexBytes returns a transformer that replaces all matches of re with the
-// results returned from the replace function
-func RegexBytes(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
+// RegexBytes returns a transformer that replaces all matches of re with new
+func RegexBytes(re *regexp.Regexp, new []byte) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
 		MaxSourceBuffer: 4 << 10,
-		replace: func(src []byte, index []int) []byte {
-			return replace(src[index[0]:index[1]])
-		},
+		new:             new,
 	}
 }
 
 // RegexString returns a transformer that replaces all matches of re with the
 // results returned from the replace function
-func RegexString(re *regexp.Regexp, replace func(string) string) RegexTransformer {
+func RegexString(re *regexp.Regexp, new string) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
 		MaxSourceBuffer: 4 << 10,
-		replace: func(src []byte, index []int) []byte {
-			return []byte(replace(string(src[index[0]:index[1]])))
-		},
+		new:             []byte(new),
+	}
+}
+
+func RegexFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
+	return RegexTransformer{
+		re:              re,
+		MaxSourceBuffer: 4 << 10,
+		replace:         replace,
 	}
 }
 
@@ -135,7 +139,15 @@ func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int
 			return nDst, nSrc, err
 		}
 		// copy the replacement
-		n, err = fullcopy(dst[nDst:], t.replace(src, index))
+		if t.new != nil {
+			n, err = fullcopy(dst[nDst:], t.new)
+		} else {
+			// could just document not to modify the replace parameter
+			// but I don't trust people to read it.
+			match := make([]byte, index[1]-index[0])
+			copy(match, src[index[0]:index[1]])
+			n, err = fullcopy(dst[nDst:], t.replace(match))
+		}
 		if err != nil {
 			return nDst, nSrc, err
 		}
