@@ -174,7 +174,7 @@ func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc in
 		// skip the match if it ends at the end the src buffer.
 		// it could potentionally match more
 		if index[1] == len(src)-1 && !atEOF {
-			continue
+			break
 		}
 		// copy evertying up to the match
 		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
