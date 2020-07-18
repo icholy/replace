@@ -1,6 +1,7 @@
 package replace
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -37,7 +38,27 @@ func TestTransformer(t *testing.T) {
 			tr := String(tt.old, tt.new)
 			result, _, err := transform.String(tr, tt.in)
 			assert.NilError(t, err)
-			assert.Equal(t, result, tt.out)
+			assert.DeepEqual(t, result, tt.out)
+		})
+	}
+}
+
+func TestRegex(t *testing.T) {
+	tests := []struct {
+		in  string
+		re  string
+		new string
+		out string
+	}{
+		{"a", "a", "b", "b"},
+	}
+	for i, tt := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			re := regexp.MustCompile(tt.re)
+			tr := RegexString(re, tt.new)
+			result, _, err := transform.String(tr, tt.in)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, result, tt.out)
 		})
 	}
 }
