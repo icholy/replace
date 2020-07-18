@@ -95,10 +95,24 @@ type RegexTransformer struct {
 
 var _ transform.Transformer = (*RegexTransformer)(nil)
 
-// Regex returns a transformer that replaces all matches of re with the
+// RegexBytes returns a transformer that replaces all matches of re with new
+func RegexBytes(re *regexp.Regexp, new []byte) RegexTransformer {
+	return RegexTransformer{
+		re:              re,
+		MaxSourceBuffer: 4 << 10,
+		replace:         func(src []byte, index []int) []byte { return new },
+	}
+}
+
+// RegexString returns a transformer that replaces all matches of re with new
+func RegexString(re *regexp.Regexp, new []byte) RegexTransformer {
+	return RegexBytes(re, []byte(new))
+}
+
+// RegexFunc returns a transformer that replaces all matches of re with the
 // result of calling replace with the match. Replace may be called with the
 // same match multiple times.
-func Regex(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
+func RegexFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
 	return RegexTransformer{
 		re:              re,
 		MaxSourceBuffer: 4 << 10,
@@ -110,9 +124,28 @@ func Regex(re *regexp.Regexp, replace func([]byte) []byte) RegexTransformer {
 	}
 }
 
+// RegexSubmatchFunc returns a transformer that replaces all matches of re with the
+// result of calling replace with the submatch. Replace may be called with the
+// same match multiple times.
+func RegexSubmatch(re *regexp.Regexp, replace func([][]byte) []byte) RegexTransformer {
+	return RegexTransformer{
+		re:              re,
+		MaxSourceBuffer: 4 << 10,
+		replace: func(src []byte, index []int) []byte {
+			match := make([][]byte, 1+re.NumSubexp())
+			for i := range match {
+				start, end := index[i*2], index[i*2+1]
+				match[i] = make([]byte, end-start)
+				copy(match[i], src[start:end])
+			}
+			return replace(match)
+		},
+	}
+}
+
 // Transform implements golang.org/x/text/transform#Transformer
 func (t RegexTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
-	for _, index := range t.re.FindAllIndex(src, -1) {
+	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
 		// skip the match if it ends at the end the src buffer.
 		// it could potentionally match more
 		if index[1] == len(src)-1 && !atEOF {
