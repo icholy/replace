@@ -119,7 +119,7 @@ func RegexpString(re *regexp.Regexp, new string) RegexpTransformer {
 }
 
 // RegexpFunc returns a transformer that replaces all matches of re with the
-// result of calling replace with the match . Replace may be called with the
+// result of calling replace with the match. Replace may be called with the
 // same match multiple times. The []byte parameter passed to replace should not be modified
 // and is not guaranteed to be valid after the function returns.
 func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransformer {
