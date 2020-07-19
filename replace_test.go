@@ -115,6 +115,10 @@ func TestTransformer(t *testing.T) {
 				return []byte("replaced")
 			}),
 		},
+		{
+			in: strings.Repeat("x", 10<<10), out: "",
+			tr: Regexp(regexp.MustCompile(".*"), nil),
+		},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

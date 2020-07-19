@@ -182,7 +182,7 @@ func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc in
 		}
 		// skip the match if it ends at the end the src buffer.
 		// it could potentially match more
-		if index[1] == len(src)-1 && !atEOF {
+		if index[1] == len(src) && !atEOF {
 			break
 		}
 		// copy the replacement
