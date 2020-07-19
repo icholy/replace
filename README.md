@@ -39,3 +39,9 @@ func main() {
 	_, _ = io.Copy(os.Stdout, r)
 }
 ```
+
+## Notes Regexp* functions
+
+* The `replace` functions may be called multiple times with the same match.
+* The `replace` functions should not save or modify any `[]byte` parameters they recieve.
+* For better performance, reduce the `MaxSourceBuffer` size to the largest possible match.
