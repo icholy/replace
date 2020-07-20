@@ -32,10 +32,10 @@ func main() {
 		replace.Regexp(regexp.MustCompile(`baz\w*`), nil),
 
 		// increment all numbers
-		replace.RegexpStringFunc(regexp.MustCompile(`\d+`, func(match string) string {
+		replace.RegexpStringFunc(regexp.MustCompile(`\d+`), func(match string) string {
 			x, _ := strconv.Atoi(match)
 			return strconv.Itoa(x+1)
-		}))
+		}),
 	))
 
 	_, _ = io.Copy(os.Stdout, r)
