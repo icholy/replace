@@ -162,14 +162,15 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
-	// copy any leftovers from the last call
+	// copy any overflow from the last call
 	if len(t.overflow) > 0 {
 		n, err := fullcopy(dst, t.overflow)
-		t.overflow = t.overflow[n:]
 		nDst += n
 		if err != nil {
+			t.overflow = t.overflow[n:]
 			return nDst, nSrc, err
 		}
+		t.overflow = nil
 	}
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
 		// copy evertying up to the match
@@ -187,10 +188,10 @@ func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc i
 		// copy the replacement
 		rep := t.replace(src, index)
 		n, err = fullcopy(dst[nDst:], rep)
-		t.overflow = rep[n:]
 		nDst += n
 		nSrc = index[1]
 		if err != nil {
+			t.overflow = rep[n:]
 			return nDst, nSrc, err
 		}
 	}
