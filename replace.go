@@ -84,8 +84,6 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 // RegexpTransformer replaces regexp matches in a stream
 // See: http://golang.org/x/text/transform
 type RegexpTransformer struct {
-	transform.NopResetter
-
 	// MaxSourceBuffer is the maximum size of the window used to search for the
 	// regex match. (Default is 64kb).
 	MaxSourceBuffer int
@@ -213,6 +211,11 @@ func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc i
 		}
 	}
 	return nDst, nSrc, transform.ErrShortSrc
+}
+
+// Reset resets the state and allows a Transformer to be reused.
+func (t *RegexpTransformer) Reset() {
+	t.overflow = nil
 }
 
 func fullcopy(dst, src []byte) (int, error) {
