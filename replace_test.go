@@ -128,3 +128,17 @@ func TestTransformer(t *testing.T) {
 		})
 	}
 }
+
+func TestOverflowDst(t *testing.T) {
+	var calls int
+	s := strings.Repeat("x", 8<<10)
+	tr := RegexpStringFunc(regexp.MustCompile("x"), func(_ string) string {
+		calls++
+		return s
+	})
+
+	result, _, err := transform.String(tr, "x")
+	assert.NilError(t, err)
+	assert.Equal(t, result, s)
+	assert.Equal(t, calls, 1)
+}

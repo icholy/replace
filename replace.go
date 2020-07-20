@@ -90,18 +90,18 @@ type RegexpTransformer struct {
 	// regex match. (Default is 64kb).
 	MaxSourceBuffer int
 
-	re      *regexp.Regexp
-	replace func(src []byte, index []int) []byte
+	re       *regexp.Regexp
+	replace  func(src []byte, index []int) []byte
+	overflow []byte
 }
 
 var _ transform.Transformer = (*RegexpTransformer)(nil)
 
 // RegexpIndexFunc returns a transformer that replaces all matches of re with the return value of replace.
-// The replace function recieves the underlying src buffer and indexes into that buffer. Replace may be called
-// with the same match multiple times. The []byte parameter passed to replace should not be modified and is not
-// guaranteed to be valid after the function returns.
-func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []byte) RegexpTransformer {
-	return RegexpTransformer{
+// The replace function recieves the underlying src buffer and indexes into that buffer.
+// The []byte parameter passed to replace should not be modified and is not guaranteed to be valid after the function returns.
+func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []byte) *RegexpTransformer {
+	return &RegexpTransformer{
 		re:              re,
 		replace:         replace,
 		MaxSourceBuffer: 64 << 10,
@@ -109,39 +109,33 @@ func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []
 }
 
 // Regexp returns a transformer that replaces all matches of re with new
-func Regexp(re *regexp.Regexp, new []byte) RegexpTransformer {
+func Regexp(re *regexp.Regexp, new []byte) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(_ []byte, _ []int) []byte { return new })
 }
 
 // RegexpString returns a transformer that replaces all matches of re with new
-func RegexpString(re *regexp.Regexp, new string) RegexpTransformer {
+func RegexpString(re *regexp.Regexp, new string) *RegexpTransformer {
 	return Regexp(re, []byte(new))
 }
 
-// RegexpFunc returns a transformer that replaces all matches of re with the
-// result of calling replace with the match. Replace may be called with the
-// same match multiple times. The []byte parameter passed to replace should not be modified
-// and is not guaranteed to be valid after the function returns.
-func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) RegexpTransformer {
+// RegexpFunc returns a transformer that replaces all matches of re with the result of calling replace with the match.
+// The []byte parameter passed to replace should not be modified and is not guaranteed to be valid after the function returns.
+func RegexpFunc(re *regexp.Regexp, replace func([]byte) []byte) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		return replace(src[index[0]:index[1]])
 	})
 }
 
-// RegexpStringFunc returns a transformer that replaces all matches of re with
-// the result of calling replace with the match. Replace may be called with
-// the same match multiple times.
-func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) RegexpTransformer {
+// RegexpStringFunc returns a transformer that replaces all matches of re with the result of calling replace with the match.
+func RegexpStringFunc(re *regexp.Regexp, replace func(string) string) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		return []byte(replace(string(src[index[0]:index[1]])))
 	})
 }
 
-// RegexpSubmatchFunc returns a transformer that replaces all matches of re with the
-// result of calling replace with the submatch. Replace may be called with the
-// same match multiple times. The [][]byte parameter passed to replace should not be modified
-// and is not guaranteed to be valid after the function returns.
-func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) RegexpTransformer {
+// RegexpSubmatchFunc returns a transformer that replaces all matches of re with the result of calling replace with the submatch.
+// The [][]byte parameter passed to replace should not be modified and is not guaranteed to be valid after the function returns.
+func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([][]byte, 1+re.NumSubexp())
 		for i := range match {
@@ -154,10 +148,8 @@ func RegexpSubmatchFunc(re *regexp.Regexp, replace func([][]byte) []byte) Regexp
 	})
 }
 
-// RegexpStringSubmatchFunc returns a transformer that replaces all matches of re with the
-// result of calling replace with the submatch. Replace may be called with the
-// same match multiple times.
-func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) RegexpTransformer {
+// RegexpStringSubmatchFunc returns a transformer that replaces all matches of re with the result of calling replace with the submatch.
+func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
 		match := make([]string, 1+re.NumSubexp())
 		for i := range match {
@@ -171,7 +163,16 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 }
 
 // Transform implements golang.org/x/text/transform#Transformer
-func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	// copy any leftovers from the last call
+	if len(t.overflow) > 0 {
+		n, err := fullcopy(dst, t.overflow)
+		t.overflow = t.overflow[n:]
+		nDst += n
+		if err != nil {
+			return nDst, nSrc, err
+		}
+	}
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
 		// copy evertying up to the match
 		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
@@ -186,12 +187,14 @@ func (t RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc in
 			break
 		}
 		// copy the replacement
-		n, err = fullcopy(dst[nDst:], t.replace(src, index))
+		rep := t.replace(src, index)
+		n, err = fullcopy(dst[nDst:], rep)
+		t.overflow = rep[n:]
+		nDst += n
+		nSrc = index[1]
 		if err != nil {
 			return nDst, nSrc, err
 		}
-		nDst += n
-		nSrc = index[1]
 	}
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
