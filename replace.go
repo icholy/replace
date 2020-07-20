@@ -173,7 +173,7 @@ func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc i
 		t.overflow = nil
 	}
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
-		// copy evertying up to the match
+		// copy everything up to the match
 		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
 		nSrc += n
 		nDst += n
