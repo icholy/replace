@@ -90,10 +90,6 @@ type RegexpTransformer struct {
 	// regex match. (Default is 64kb).
 	MaxSourceBuffer int
 
-	// Align will force the src buffer to always begin at the start of a line
-	// and end at the end of a line
-	Align bool
-
 	re       *regexp.Regexp
 	replace  func(src []byte, index []int) []byte
 	overflow []byte
