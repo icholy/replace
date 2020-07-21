@@ -32,11 +32,12 @@ func String(old, new string) Transformer {
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	var n int
 	// don't do anything for empty old string. We're forced to do this because an optimization in
 	// transform.String prevents us from generating any output when the src is empty.
 	// see: https://github.com/golang/text/blob/master/transform/transform.go#L570-L576
 	if t.oldlen == 0 {
-		n, err := fullcopy(dst, src)
+		n, err = fullcopy(dst, src)
 		return n, n, err
 	}
 	// replace all instances of old with new
@@ -46,39 +47,40 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 			break
 		}
 		// copy everything up to the match
-		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+i])
+		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+i])
 		nSrc += n
 		nDst += n
 		if err != nil {
-			return nDst, nSrc, err
+			return
 		}
 		// copy the new value
 		n, err = fullcopy(dst[nDst:], t.new)
 		if err != nil {
-			return nDst, nSrc, err
+			return
 		}
 		nDst += n
 		nSrc += t.oldlen
 	}
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
-		n, err := fullcopy(dst[nDst:], src[nSrc:])
+		n, err = fullcopy(dst[nDst:], src[nSrc:])
 		nDst += n
 		nSrc += n
-		return nDst, nSrc, err
+		return
 	}
 	// skip everything except the trailing len(r.old) - 1
 	// we do this becasue there could be a match straddling
 	// the boundary
 	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
-		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
+		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		nSrc += n
 		nDst += n
 		if err != nil {
-			return nDst, nSrc, err
+			return
 		}
 	}
-	return nDst, nSrc, transform.ErrShortSrc
+	err = transform.ErrShortSrc
+	return
 }
 
 // RegexpTransformer replaces regexp matches in a stream
@@ -87,6 +89,10 @@ type RegexpTransformer struct {
 	// MaxSourceBuffer is the maximum size of the window used to search for the
 	// regex match. (Default is 64kb).
 	MaxSourceBuffer int
+
+	// Align will force the src buffer to always begin at the start of a line
+	// and end at the end of a line
+	Align bool
 
 	re       *regexp.Regexp
 	replace  func(src []byte, index []int) []byte
@@ -162,23 +168,24 @@ func RegexpStringSubmatchFunc(re *regexp.Regexp, replace func([]string) string) 
 
 // Transform implements golang.org/x/text/transform#Transformer
 func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	var n int
 	// copy any overflow from the last call
 	if len(t.overflow) > 0 {
-		n, err := fullcopy(dst, t.overflow)
+		n, err = fullcopy(dst, t.overflow)
 		nDst += n
 		if err != nil {
 			t.overflow = t.overflow[n:]
-			return nDst, nSrc, err
+			return
 		}
 		t.overflow = nil
 	}
 	for _, index := range t.re.FindAllSubmatchIndex(src, -1) {
 		// copy everything up to the match
-		n, err := fullcopy(dst[nDst:], src[nSrc:index[0]])
+		n, err = fullcopy(dst[nDst:], src[nSrc:index[0]])
 		nSrc += n
 		nDst += n
 		if err != nil {
-			return nDst, nSrc, err
+			return
 		}
 		// skip the match if it ends at the end the src buffer.
 		// it could potentially match more
@@ -192,26 +199,27 @@ func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc i
 		nSrc = index[1]
 		if err != nil {
 			t.overflow = rep[n:]
-			return nDst, nSrc, err
+			return
 		}
 	}
 	// if we're at the end, tack on any remaining bytes
 	if atEOF {
-		n, err := fullcopy(dst[nDst:], src[nSrc:])
+		n, err = fullcopy(dst[nDst:], src[nSrc:])
 		nDst += n
 		nSrc += n
-		return nDst, nSrc, err
+		return
 	}
 	// skip any bytes which exceede the max source limit
 	if skip := len(src[nSrc:]) - t.MaxSourceBuffer; skip > 0 {
-		n, err := fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
+		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		nSrc += n
 		nDst += n
 		if err != nil {
-			return nDst, nSrc, err
+			return
 		}
 	}
-	return nDst, nSrc, transform.ErrShortSrc
+	err = transform.ErrShortSrc
+	return
 }
 
 // Reset resets the state and allows a Transformer to be reused.
