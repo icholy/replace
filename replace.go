@@ -113,9 +113,12 @@ func Regexp(re *regexp.Regexp, new []byte) *RegexpTransformer {
 	return RegexpIndexFunc(re, func(_ []byte, _ []int) []byte { return new })
 }
 
-// RegexpString returns a transformer that replaces all matches of re with new
-func RegexpString(re *regexp.Regexp, new string) *RegexpTransformer {
-	return Regexp(re, []byte(new))
+// RegexpString returns a transformer that replaces all matches of re with template
+// Inside template, $ signs are interpreted as in Expand, so for instance $1 represents the text of the first submatch.
+func RegexpString(re *regexp.Regexp, template string) *RegexpTransformer {
+	return RegexpIndexFunc(re, func(src []byte, index []int) []byte {
+		return re.Expand(nil, []byte(template), src, index)
+	})
 }
 
 // RegexpFunc returns a transformer that replaces all matches of re with the result of calling replace with the match.
