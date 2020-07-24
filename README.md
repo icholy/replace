@@ -48,5 +48,5 @@ func main() {
 ## Notes Regexp* functions
 
 * The `replace` functions should not save or modify any `[]byte` parameters they recieve.
-* For better performance, reduce the `MaxSourceBuffer` size to the largest possible match (Default 64kb).
-* If a match is longer than `MaxSourceBuffer` it may be skipped.
+* For better performance, reduce the `MaxMatchSize` size to the largest possible match (Default 64kb).
+* If a match is longer than `MaxMatchSize` it may be skipped.

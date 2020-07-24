@@ -86,9 +86,10 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 // RegexpTransformer replaces regexp matches in a stream
 // See: http://golang.org/x/text/transform
 type RegexpTransformer struct {
-	// MaxSourceBuffer is the maximum size of the window used to search for the
-	// regex match. (Default is 64kb).
-	MaxSourceBuffer int
+	// MaxMatchSize is the maximum size of a regexp match.
+	// If a match exceeds this limit, it may be omitted.
+	// (Default is 64kb).
+	MaxMatchSize int
 
 	re       *regexp.Regexp
 	replace  func(src []byte, index []int) []byte
@@ -102,9 +103,9 @@ var _ transform.Transformer = (*RegexpTransformer)(nil)
 // The []byte parameter passed to replace should not be modified and is not guaranteed to be valid after the function returns.
 func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []byte) *RegexpTransformer {
 	return &RegexpTransformer{
-		re:              re,
-		replace:         replace,
-		MaxSourceBuffer: 64 << 10,
+		re:           re,
+		replace:      replace,
+		MaxMatchSize: 64 << 10,
 	}
 }
 
@@ -208,8 +209,8 @@ func (t *RegexpTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc i
 		nSrc += n
 		return
 	}
-	// skip any bytes which exceede the max source limit
-	if skip := len(src[nSrc:]) - t.MaxSourceBuffer; skip > 0 {
+	// skip any bytes which exceede the max match size
+	if skip := len(src[nSrc:]) - t.MaxMatchSize; skip > 0 {
 		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
 		nSrc += n
 		nDst += n
