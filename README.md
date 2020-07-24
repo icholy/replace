@@ -31,6 +31,9 @@ func main() {
 		// remove all words that start with baz
 		replace.Regexp(regexp.MustCompile(`baz\w*`), nil),
 
+		// surround all words with parentheses
+		replace.RegexpString(regexp.MustCompile(`\w+`), "($0)"),
+
 		// increment all numbers
 		replace.RegexpStringFunc(regexp.MustCompile(`\d+`), func(match string) string {
 			x, _ := strconv.Atoi(match)

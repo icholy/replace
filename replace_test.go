@@ -119,6 +119,10 @@ func TestTransformer(t *testing.T) {
 			in: strings.Repeat("x", 10<<10), out: "",
 			tr: Regexp(regexp.MustCompile(".*"), nil),
 		},
+		{
+			in: "this is a test", out: "(this) (is) (a) (test)",
+			tr: RegexpString(regexp.MustCompile(`\w+`), "($0)"),
+		},
 	}
 	for i, tt := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
