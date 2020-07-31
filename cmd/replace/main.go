@@ -28,8 +28,9 @@ func main() {
 	}
 	tr := replace.RegexpString(re, new)
 	tr.MaxMatchSize = max
-	// if there are no files, read from stdin
-	if flag.NArg() == 0 {
+	// if stdin is a pipe, read from that
+	info, _ := os.Stdin.Stat()
+	if info.Mode()&os.ModeCharDevice == 0 {
 		r := transform.NewReader(os.Stdin, tr)
 		if _, err := io.Copy(os.Stdout, r); err != nil {
 			log.Fatal(err)
