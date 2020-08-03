@@ -61,10 +61,8 @@ func rewrite(name string, t transform.Transformer) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		tmp.Close()
-		os.Remove(tmp.Name())
-	}()
+	defer tmp.Close()
+	defer os.Remove(tmp.Name())
 	// replace while copying from f to tmp
 	if _, err := io.Copy(tmp, transform.NewReader(f, t)); err != nil {
 		return err
