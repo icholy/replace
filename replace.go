@@ -227,10 +227,10 @@ func (t *RegexpTransformer) Reset() {
 	t.overflow = nil
 }
 
-func fullcopy(dst, src []byte) (int, error) {
-	n := copy(dst, src)
+func fullcopy(dst, src []byte) (n int, err error) {
+	n = copy(dst, src)
 	if n < len(src) {
-		return n, transform.ErrShortDst
+		err = transform.ErrShortDst
 	}
-	return n, nil
+	return
 }
