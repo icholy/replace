@@ -85,6 +85,7 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 
 // RegexpTransformer replaces regexp matches in a stream
 // See: http://golang.org/x/text/transform
+// Note: this Transformer is not safe for concurrent use.
 type RegexpTransformer struct {
 	// MaxMatchSize is the maximum size of a regexp match.
 	// If a match exceeds this limit, it may be omitted.
