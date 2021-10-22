@@ -89,7 +89,7 @@ func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err
 type RegexpTransformer struct {
 	// MaxMatchSize is the maximum size of a regexp match.
 	// If a match exceeds this limit, it may be omitted.
-	// (Default is 64kb).
+	// (Default is 2kb).
 	MaxMatchSize int
 
 	re       *regexp.Regexp
@@ -106,7 +106,7 @@ func RegexpIndexFunc(re *regexp.Regexp, replace func(src []byte, index []int) []
 	return &RegexpTransformer{
 		re:           re,
 		replace:      replace,
-		MaxMatchSize: 64 << 10,
+		MaxMatchSize: 2 << 10,
 	}
 }
 

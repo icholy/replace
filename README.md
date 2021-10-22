@@ -49,5 +49,5 @@ func main() {
 
 * `RegexpTransformer` is stateful and cannot be used concurrently.
 * The `replace` functions should not save or modify any `[]byte` parameters they recieve.
-* If a match is longer than `MaxMatchSize` it may be skipped (Default 64kb).
+* If a match is longer than `MaxMatchSize` it may be skipped (Default 2kb).
 * For better performance, reduce the `MaxMatchSize` size to the largest possible match.
