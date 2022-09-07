@@ -2,10 +2,19 @@ package replace
 
 import (
 	"bytes"
+	"io"
 	"regexp"
 
 	"golang.org/x/text/transform"
 )
+
+// Chain returns a reader which applies all provided transformers.
+func Chain(r io.Reader, tt ...transform.Transformer) io.Reader {
+	for _, t := range tt {
+		r = transform.NewReader(r, t)
+	}
+	return r
+}
 
 // Transformer replaces text in a stream
 // See: http://golang.org/x/text/transform

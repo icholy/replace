@@ -16,14 +16,13 @@ import (
 	"regexp"
 
 	"github.com/icholy/replace"
-	"golang.org/x/text/transform"
 )
 
 func main() {
 	f, _ := os.Open("file")
 	defer f.Close()
 
-	r := transform.NewReader(f, transform.Chain(
+	r := replace.Chain(f,
 		// simple replace
 		replace.String("foo", "bar"),
 		replace.Bytes([]byte("thing"), []byte("test")),
@@ -39,7 +38,7 @@ func main() {
 			x, _ := strconv.Atoi(match)
 			return strconv.Itoa(x+1)
 		}),
-	))
+	)
 
 	_, _ = io.Copy(os.Stdout, r)
 }
@@ -51,3 +50,4 @@ func main() {
 * The `replace` functions should not save or modify any `[]byte` parameters they recieve.
 * If a match is longer than `MaxMatchSize` it may be skipped (Default 2kb).
 * For better performance, reduce the `MaxMatchSize` size to the largest possible match.
+* Do not use with [transform.Chain](https://pkg.go.dev/golang.org/x/text/transform#Chain), see https://github.com/golang/go/issues/49117.

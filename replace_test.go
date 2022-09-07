@@ -1,7 +1,9 @@
 package replace
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -141,4 +143,19 @@ func TestOverflowDst(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, result, s)
 	assert.Equal(t, calls, 1)
+}
+
+func TestChain(t *testing.T) {
+	var input bytes.Buffer
+	input.WriteString(strings.Repeat("x", 1000))
+	input.WriteString(strings.Repeat("y", 1000))
+	input.WriteString(strings.Repeat("z", 1000))
+	r := Chain(&input,
+		RegexpString(regexp.MustCompile("x+"), "1"),
+		RegexpString(regexp.MustCompile("y+"), "2"),
+		RegexpString(regexp.MustCompile("z+"), "3"),
+	)
+	output, err := io.ReadAll(r)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, string(output), "123")
 }
